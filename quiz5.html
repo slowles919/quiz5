@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASEM Mülakat Quiz 5</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+        #quiz-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 90%; max-width: 600px; }
+        #question { font-size: 1.2em; margin-bottom: 20px; }
+        #options { display: flex; flex-direction: column; gap: 10px; }
+        button { padding: 10px; font-size: 1em; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        #mnemonic { margin-top: 20px; font-style: italic; color: #555; display: none; }
+        #score { margin-top: 20px; font-weight: bold; }
+        #next-button { margin-top: 20px; display: none; }
+    </style>
+</head>
+<body>
+    <div id="quiz-container">
+        <div id="question"></div>
+        <div id="options"></div>
+        <div id="mnemonic"></div>
+        <div id="score">Skor: 0</div>
+        <button id="next-button" onclick="loadNextQuestion()">Sonraki Soru</button>
+    </div>
+
+    <script>
+        const questions = [
+            { id: 301, question: "Osmanlı Devleti’nde ilk saat kulesi ne zaman yapılmıştır?", correctAnswer: "1901", incorrectAnswers: ["1831", "1876", "1923"], mnemonic: "1901’de ‘S’aat ‘K’ulesi ‘K’alktı, Osmanlı’da!" },
+            { id: 302, question: "İç Anadolu Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Kapadokya", incorrectAnswers: ["Ankara", "Konya", "Çankırı"], mnemonic: "İç Anadolu’da ‘K’apadokya, ‘T’urizmin peri masalı!" },
+            { id: 303, question: "‘Ateş düştüğü yeri yakar’ atasözü neyi ifade eder?", correctAnswer: "Acı çeken bizzat yaşayanı etkiler", incorrectAnswers: ["Ateş her zaman yakar", "Acı her zaman yayılır", "Yanan her zaman aynıdır"], mnemonic: "Ateş ‘A’cıyla ‘Y’akar, düşen yeri!" },
+            { id: 304, question: "Atatürk’ün en sevdiği ağaç nedir?", correctAnswer: "Çam", incorrectAnswers: ["Meşe", "Çınar", "Selvi"], mnemonic: "Çam ‘Ç’ok güzel, ‘A’tatürk’ün ağacı!" },
+            { id: 305, question: "Türkiye’nin en büyük adalet sarayı neresidir?", correctAnswer: "İstanbul Adalet Sarayı", incorrectAnswers: ["Ankara Adalet Sarayı", "İzmir Adalet Sarayı", "Bursa Adalet Sarayı"], mnemonic: "İstanbul ‘İ’lk, ‘A’dalet sarayı en büyük!" },
+            { id: 306, question: "‘Balık baştan kokar’ atasözü ne anlama gelir?", correctAnswer: "Kötülük üst yönetimden başlar", incorrectAnswers: ["Balık her zaman kokar", "Baş her zaman iyidir", "Kötülük her yerde vardır"], mnemonic: "Balık ‘B’aştan ‘K’okar, yönetimden!" },
+            { id: 307, question: "Osmanlı Devleti’nde ilk radyo istasyonu ne zaman kurulmuştur?", correctAnswer: "1927", incorrectAnswers: ["1831", "1908", "1940"], mnemonic: "1927’de ‘R’adyo ‘İ’stasyonu ‘İ’lk kez, Osmanlı’da!" },
+            { id: 308, question: "Akdeniz Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Alanya", incorrectAnswers: ["Antalya", "Mersin", "Adana"], mnemonic: "Akdeniz’de ‘A’lana, ‘T’urizmin gözdesi!" },
+            { id: 309, question: "‘Bana dokunmayan yılan bin yıl yaşasın’ atasözü neyi ifade eder?", correctAnswer: "Kendi çıkarını korumak için sessiz kalma", incorrectAnswers: ["Yılan her zaman yaşar", "Sessizlik her zaman iyidir", "Yılanlara dokunulmaz"], mnemonic: "Yılan ‘Y’aklaşmasın, ‘B’in yıl yaşasın!" },
+            { id: 310, question: "Atatürk’ün en sevdiği çiçek türü nedir?", correctAnswer: "Orkide", incorrectAnswers: ["Gül", "Papatya", "Lale"], mnemonic: "Orkide ‘O’lağanüstü, ‘A’tatürk’ün çiçeği!" },
+            { id: 311, question: "Türkiye’nin en büyük kütüphanesi hangisidir?", correctAnswer: "Milli Kütüphane (Ankara)", incorrectAnswers: ["İstanbul Üniversitesi Kütüphanesi", "Beyazıt Devlet Kütüphanesi", "Süleymaniye Kütüphanesi"], mnemonic: "Milli ‘M’ükemmel, ‘K’ütüphane en büyük!" },
+            { id: 312, question: "‘Büyük lokma ye, büyük söz söyleme’ atasözü ne anlama gelir?", correctAnswer: "Alçak gönüllü ol", incorrectAnswers: ["Lokma her zaman büyük olmalı", "Söz her zaman küçüktür", "Alçak gönüllülük gereksizdir"], mnemonic: "Büyük ‘B’ir lokma, ‘K’üçük sözle!" },
+            { id: 313, question: "Osmanlı Devleti’nde ilk fabrika ne zaman kurulmuştur?", correctAnswer: "1827", incorrectAnswers: ["1773", "1876", "1908"], mnemonic: "1827’de ‘F’abrika ‘F’ırladı, Osmanlı’da!" },
+            { id: 314, question: "Marmara Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Çanakkale", incorrectAnswers: ["Bursa", "Tekirdağ", "Balıkesir"], mnemonic: "Marmara’da ‘Ç’anakkale, ‘T’urizmin kahramanı!" },
+            { id: 315, question: "‘Çok bilen çok yanılır’ atasözü neyi ifade eder?", correctAnswer: "Aşırı bilgi hata yapar", incorrectAnswers: ["Bilgi her zaman iyidir", "Yanılmak gereksizdir", "Herkes yanılır"], mnemonic: "Çok ‘Ç’ıkar, ‘Y’anılır!" },
+            { id: 316, question: "Atatürk’ün en sevdiği balık nedir?", correctAnswer: "Levrek", incorrectAnswers: ["Hamsi", "Palamut", "Kalkan"], mnemonic: "Levrek ‘L’ezzetli, ‘A’tatürk’ün balığı!" },
+            { id: 317, question: "Türkiye’nin en büyük spor salonu neresidir?", correctAnswer: "Sinan Erdem Spor Salonu", incorrectAnswers: ["Abdi İpekçi Spor Salonu", "Ankara Arena", "Bursa Atatürk Spor Salonu"], mnemonic: "Sinan ‘S’üper, ‘S’por salonu en büyük!" },
+            { id: 318, question: "‘Dağ dağa kavuşmaz, insan insana kavuşur’ atasözü ne anlama gelir?", correctAnswer: "İnsanlar birbirine ulaşabilir", incorrectAnswers: ["Dağlar her zaman kavuşur", "İnsanlar kavuşmaz", "Ulaşmak gereksizdir"], mnemonic: "Dağ ‘D’urur, insan ‘İ’nsana kavuşur!" },
+            { id: 319, question: "Osmanlı Devleti’nde ilk tren hattı ne zaman açılmıştır?", correctAnswer: "1856", incorrectAnswers: ["1831", "1876", "1908"], mnemonic: "1856’da ‘T’ren ‘H’attı hareket etti, Osmanlı’da!" },
+            { id: 320, question: "Doğu Anadolu Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Ağrı", incorrectAnswers: ["Van", "Erzurum", "Kars"], mnemonic: "Doğu’da ‘A’ğrı, ‘T’urizmin zirvesi!" },
+            { id: 321, question: "‘El kapısında dilenme’ atasözü neyi ifade eder?", correctAnswer: "Kendi emeğinle yaşa", incorrectAnswers: ["Dilenmek her zaman iyidir", "El kapısı her zaman açıktır", "Emeğe gerek yok"], mnemonic: "El ‘E’linde dilenme, ‘K’endi emeğinle!" },
+            { id: 322, question: "Atatürk’ün en sevdiği hayvan türü nedir?", correctAnswer: "Köpek", incorrectAnswers: ["Kedi", "At", "Kuş"], mnemonic: "Köpek ‘K’ıymetli, ‘A’tatürk’ün dostu!" },
+            { id: 323, question: "Türkiye’nin en büyük alışveriş merkezi neresidir?", correctAnswer: "İstanbul Cevahir", incorrectAnswers: ["Ankamall", "Forum İstanbul", "Metrocity"], mnemonic: "Cevahir ‘C’ok büyük, ‘A’lışverişin kralı!" },
+            { id: 324, question: "‘Eşeği sağlam kazığa bağla’ atasözü ne anlama gelir?", correctAnswer: "İşini garantiye al", incorrectAnswers: ["Eşek her zaman sağlamdır", "Kazık her zaman gereklidir", "Garantiye gerek yok"], mnemonic: "Eşek ‘E’min olsun, ‘K’azığa bağla!" },
+            { id: 325, question: "Osmanlı Devleti’nde ilk elektrikli tramvay ne zaman kullanılmıştır?", correctAnswer: "1914", incorrectAnswers: ["1831", "1908", "1923"], mnemonic: "1914’te ‘E’lektrikli ‘T’ramvay ‘T’ıkırdadı, Osmanlı’da!" },
+            { id: 326, question: "Güneydoğu Anadolu Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Şanlıurfa", incorrectAnswers: ["Gaziantep", "Diyarbakır", "Mardin"], mnemonic: "Güneydoğu’da ‘Ş’anlıurfa, ‘T’urizmin kalbi!" },
+            { id: 327, question: "‘Gözden uzak olan gönülden de uzak olur’ atasözü neyi ifade eder?", correctAnswer: "Uzak olan unutulur", incorrectAnswers: ["Göz her zaman görür", "Gönül her zaman sever", "Uzaklık önemsizdir"], mnemonic: "Göz ‘G’örmezse, ‘G’önül uzaklaşır!" },
+            { id: 328, question: "Atatürk’ün en sevdiği sanat dalı nedir?", correctAnswer: "Resim", incorrectAnswers: ["Heykel", "Müzik", "Edebiyat"], mnemonic: "Resim ‘R’enkli, ‘A’tatürk’ün sanatı!" },
+            { id: 329, question: "Türkiye’nin en büyük hastanesi hangisidir?", correctAnswer: "Hacettepe Üniversitesi Hastanesi", incorrectAnswers: ["Çapa Tıp Fakültesi", "Ankara Numune Hastanesi", "Ege Üniversitesi Hastanesi"], mnemonic: "Hacettepe ‘H’izmet, ‘H’astane en büyük!" },
+            { id: 330, question: "‘Haksız iken kavga çıkarma’ atasözü ne anlama gelir?", correctAnswer: "Haksızken tartışma başlatma", incorrectAnswers: ["Kavga her zaman iyidir", "Haksızlık gereksizdir", "Tartışma her zaman çıkar"], mnemonic: "Haksız ‘H’ayır, ‘K’avga çıkarma!" },
+            { id: 331, question: "Osmanlı Devleti’nde ilk telgraf hattı ne zaman açılmıştır?", correctAnswer: "1855", incorrectAnswers: ["1831", "1876", "1908"], mnemonic: "1855’te ‘T’elgraf ‘H’attı ‘T’ıkırdadı, Osmanlı’da!" },
+            { id: 332, question: "Karadeniz Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Trabzon", incorrectAnswers: ["Rize", "Samsun", "Ordu"], mnemonic: "Karadeniz’de ‘T’rabzon, ‘T’urizmin incisi!" },
+            { id: 333, question: "‘İki cami arasında beynamaz’ atasözü neyi ifade eder?", correctAnswer: "Kararsız kalan başarılı olamaz", incorrectAnswers: ["Cami her zaman iyidir", "Kararsızlık gereklidir", "Herkes kararsızdır"], mnemonic: "İki ‘İ’kilem, ‘B’eynamaz kalır!" },
+            { id: 334, question: "Atatürk’ün en sevdiği mevsim nedir?", correctAnswer: "İlkbahar", incorrectAnswers: ["Yaz", "Sonbahar", "Kış"], mnemonic: "İlkbahar ‘İ’lham, ‘A’tatürk’ün mevsimi!" },
+            { id: 335, question: "Türkiye’nin en büyük oteli hangisidir?", correctAnswer: "Hilton İstanbul Bomonti", incorrectAnswers: ["Ceylan Intercontinental", "Rixos Grand Ankara", "Mövenpick Hotel"], mnemonic: "Hilton ‘H’arikadır, ‘O’tel en büyük!" },
+            { id: 336, question: "‘Kara bulutlar dağılınca güneş açar’ atasözü ne anlama gelir?", correctAnswer: "Zorluklar geçince iyilik gelir", incorrectAnswers: ["Bulutlar her zaman dağılır", "Güneş her zaman açar", "Zorluklar kalıcıdır"], mnemonic: "Kara ‘K’aranlık dağılır, ‘G’üneş açar!" },
+            { id: 337, question: "Osmanlı Devleti’nde ilk köprü ne zaman yapılmıştır?", correctAnswer: "1453", incorrectAnswers: ["1831", "1876", "1908"], mnemonic: "1453’te ‘K’öprü ‘K’uruldu, Fatih’le!" },
+            { id: 338, question: "Ege Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Kuşadası", incorrectAnswers: ["Bodrum", "Çeşme", "Marmaris"], mnemonic: "Ege’de ‘K’uşadası, ‘T’urizmin yıldızı!" },
+            { id: 339, question: "‘Körler sağırlar, birbirini ağırlar’ atasözü neyi ifade eder?", correctAnswer: "Birbirini kandıranlar anlaşır", incorrectAnswers: ["Körler her zaman ağırlar", "Sağırlar her zaman konuşur", "Anlaşma gereksizdir"], mnemonic: "Kör ‘K’andır, sağır ‘A’ğırlar!" },
+            { id: 340, question: "Atatürk’ün en sevdiği enstrüman nedir?", correctAnswer: "Kemençe", incorrectAnswers: ["Ney", "Ud", "Kanun"], mnemonic: "Kemençe ‘K’lasik, ‘A’tatürk’ün enstrümanı!" },
+            { id: 341, question: "Türkiye’nin en büyük fabrika kompleksi neresidir?", correctAnswer: "TÜPRAŞ İzmit Rafinerisi", incorrectAnswers: ["Petkim Aliağa Kompleksi", "Erdemir Kompleksi", "İsdemir Kompleksi"], mnemonic: "TÜPRAŞ ‘T’itiz, ‘İ’zmit’te fabrika kralı!" },
+            { id: 342, question: "‘Lafı uzatma, işine bak’ atasözü ne anlama gelir?", correctAnswer: "Kısa ve öz ol, çalış", incorrectAnswers: ["Laf her zaman uzar", "İş her zaman gereklidir", "Kısa olmak önemsizdir"], mnemonic: "Laf ‘L’az, ‘İ’şine bak!" },
+            { id: 343, question: "Osmanlı Devleti’nde ilk elektrik lambası ne zaman kullanılmıştır?", correctAnswer: "1879", incorrectAnswers: ["1831", "1908", "1923"], mnemonic: "1879’da ‘E’lektrik ‘L’ambası yandı, Osmanlı’da!" },
+            { id: 344, question: "Doğu Anadolu Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Van", incorrectAnswers: ["Ağrı", "Erzurum", "Kars"], mnemonic: "Doğu’da ‘V’an, ‘T’urizmin gözdesi!" },
+            { id: 345, question: "‘Mal canın yongasıdır’ atasözü neyi ifade eder?", correctAnswer: "Mal çok değerlidir", incorrectAnswers: ["Can her zaman iyidir", "Mal önemsizdir", "Yonga her zaman yeter"], mnemonic: "Mal ‘M’ükemmel, ‘C’anın yongası!" },
+            { id: 346, question: "Atatürk’ün en sevdiği sporcu kimdir?", correctAnswer: "Naim Süleymanoğlu", incorrectAnswers: ["Hidayet Türkoğlu", "Hamza Yerlikaya", "Rıza Kayaalp"], mnemonic: "Naim ‘N’aber, ‘A’tatürk’ün sporcusu!" },
+            { id: 347, question: "Türkiye’nin en büyük sinema salonu neresidir?", correctAnswer: "Cinemaximum Kanyon", incorrectAnswers: ["Cinemarine", "Metrocity Cinemaximum", "Akasya Cinemaximum"], mnemonic: "Cinemaximum ‘C’ok büyük, ‘K’anyon’da!" },
+            { id: 348, question: "‘Ne ekersen onu biçersin’ atasözü ne anlama gelir?", correctAnswer: "Davranışlarının sonucunu yaşarsın", incorrectAnswers: ["Ekmek her zaman iyidir", "Biçmek gereksizdir", "Sonuç her zaman aynıdır"], mnemonic: "Ne ‘N’aber, ‘B’içersin!" },
+            { id: 349, question: "Osmanlı Devleti’nde ilk fabrika ne zaman kurulmuştur?", correctAnswer: "1827", incorrectAnswers: ["1773", "1876", "1908"], mnemonic: "1827’de ‘F’abrika ‘F’ırladı, Osmanlı’da!" },
+            { id: 350, question: "Güneydoğu Anadolu Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Gaziantep", incorrectAnswers: ["Şanlıurfa", "Diyarbakır", "Mardin"], mnemonic: "Güneydoğu’da ‘G’aziantep, ‘T’urizmin kalbi!" },
+            { id: 351, question: "‘Oturduğum yerden kalkmam’ atasözü neyi ifade eder?", correctAnswer: "Kolay pes etmem", incorrectAnswers: ["Herkes kalkar", "Oturmak her zaman iyidir", "Pes etmek gereklidir"], mnemonic: "Otur ‘O’ğlum, ‘K’alkma!" },
+            { id: 352, question: "Atatürk’ün en sevdiği dansçı kimdir?", correctAnswer: "Nijinsky", incorrectAnswers: ["Rudolf Nureyev", "Mikhail Baryshnikov", "Vaslav Nijinsky"], mnemonic: "Nijinsky ‘N’aber, ‘A’tatürk’ün dansçısı!" },
+            { id: 353, question: "Türkiye’nin en büyük lojistik merkezi neresidir?", correctAnswer: "Halkalı Lojistik Merkezi", incorrectAnswers: ["İzmir Lojistik Merkezi", "Ankara Lojistik Merkezi", "Mersin Lojistik Merkezi"], mnemonic: "Halkalı ‘H’ızlı, ‘L’ojistikte en büyük!" },
+            { id: 354, question: "‘Sabır acıdır, meyvesi tatlıdır’ atasözü ne anlama gelir?", correctAnswer: "Zorluklara katlanmak ödüllendirir", incorrectAnswers: ["Sabır her zaman tatlıdır", "Meyve her zaman acı", "Zorluklar gereksizdir"], mnemonic: "Sabır ‘S’ıkıntılı, ‘T’atlı meyve!" },
+            { id: 355, question: "Osmanlı Devleti’nde ilk su kemerleri ne zaman yapılmıştır?", correctAnswer: "1453", incorrectAnswers: ["1831", "1876", "1908"], mnemonic: "1453’te ‘S’u ‘K’emeri ‘K’uruldu, Fatih’le!" },
+            { id: 356, question: "Karadeniz Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Rize", incorrectAnswers: ["Trabzon", "Samsun", "Ordu"], mnemonic: "Karadeniz’de ‘R’ize, ‘T’urizmin incisi!" },
+            { id: 357, question: "‘Söz uçar, yazı kalır’ atasözü neyi ifade eder?", correctAnswer: "Yazılı olan daha kalıcıdır", incorrectAnswers: ["Söz her zaman kalır", "Yazı her zaman uçar", "Kalıcılık gereksizdir"], mnemonic: "Söz ‘S’üzülür, ‘Y’azı kalır!" },
+            { id: 358, question: "Atatürk’ün en sevdiği film yönetmeni kimdir?", correctAnswer: "Charlie Chaplin", incorrectAnswers: ["Alfred Hitchcock", "Orson Welles", "Federico Fellini"], mnemonic: "Charlie ‘C’ılgın, ‘A’tatürk’ün yönetmeni!" },
+            { id: 359, question: "Türkiye’nin en büyük sergi salonu neresidir?", correctAnswer: "Tüyap İstanbul Fuar ve Kongre Merkezi", incorrectAnswers: ["Ankara ATO Congresium", "İzmir Kültürpark", "Bursa Merinos"], mnemonic: "Tüyap ‘T’ek, ‘F’uar salonu en büyük!" },
+            { id: 360, question: "‘Taş üstüne taş koyan kazanır’ atasözü ne anlama gelir?", correctAnswer: "Çaba gösteren başarılı olur", incorrectAnswers: ["Taş her zaman yeter", "Kazanmak gereksizdir", "Çaba her zaman başarısızdır"], mnemonic: "Taş ‘T’ek tek, ‘Kazanır!" },
+            { id: 361, question: "Osmanlı Devleti’nde ilk kömür madeni ne zaman açılmıştır?", correctAnswer: "1848", incorrectAnswers: ["1831", "1876", "1908"], mnemonic: "1848’de ‘K’ömür ‘M’adeni ‘A’çıldı, Osmanlı’da!" },
+            { id: 362, question: "Ege Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Marmaris", incorrectAnswers: ["Kuşadası", "Bodrum", "Çeşme"], mnemonic: "Ege’de ‘M’armaris, ‘T’urizmin yıldızı!" },
+            { id: 363, question: "‘Uçan kuşun kanadını vururlar’ atasözü neyi ifade eder?", correctAnswer: "Başarılı olanlar kıskanılır", incorrectAnswers: ["Kuş her zaman uçar", "Kanat her zaman vurulur", "Kıskançlık gereksizdir"], mnemonic: "Uçan ‘U’çuşu, ‘K’ıskanılır!" },
+            { id: 364, question: "Atatürk’ün en sevdiği oyun kartı nedir?", correctAnswer: "Briç", incorrectAnswers: ["Pokker", "Rummikub", "Euchre"], mnemonic: "Briç ‘B’ecerikli, ‘A’tatürk’ün oyunu!" },
+            { id: 365, question: "Türkiye’nin en büyük tarım kooperatifi neresidir?", correctAnswer: "Tarım Kredi Kooperatifi", incorrectAnswers: ["Pankobirlik", "TZOB", "Anadolu Birlik"], mnemonic: "Tarım ‘T’ek, ‘K’ooperatif en büyük!" },
+            { id: 366, question: "‘Vakit nakittir’ atasözü ne anlama gelir?", correctAnswer: "Zaman çok değerlidir", incorrectAnswers: ["Vakit her zaman nakit", "Zaman gereksizdir", "Nakit her zaman yeter"], mnemonic: "Vakit ‘V’azgeçilmez, ‘N’akit gibi!" },
+            { id: 367, question: "Osmanlı Devleti’nde ilk otobüs ne zaman kullanılmıştır?", correctAnswer: "1926", incorrectAnswers: ["1831", "1908", "1940"], mnemonic: "1926’da ‘O’tobüs ‘O’turdu, Osmanlı’da!" },
+            { id: 368, question: "Doğu Anadolu Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Erzurum", incorrectAnswers: ["Van", "Ağrı", "Kars"], mnemonic: "Doğu’da ‘E’rzurum, ‘T’urizmin gözdesi!" },
+            { id: 369, question: "‘Yaş kesen baş keser’ atasözü neyi ifade eder?", correctAnswer: "Doğaya zarar vermek cezalandırılır", incorrectAnswers: ["Yaş her zaman kesilir", "Baş her zaman kesilir", "Doğa önemsizdir"], mnemonic: "Yaş ‘Y’ıkılır, ‘B’aş keser!" },
+            { id: 370, question: "Atatürk’ün en sevdiği yemek türü nedir?", correctAnswer: "Etli yemekler", incorrectAnswers: ["Sebze yemekleri", "Tatlılar", "Çorbalar"], mnemonic: "Etli ‘E’nerji, ‘A’tatürk’ün yemeği!" },
+            { id: 371, question: "Türkiye’nin en büyük su sporları merkezi neresidir?", correctAnswer: "Antalya", incorrectAnswers: ["İzmir", "Muğla", "Aydın"], mnemonic: "Antalya ‘A’kıyor, ‘S’u sporlarında en büyük!" },
+            { id: 372, question: "‘Zaman her şeyin ilacıdır’ atasözü ne anlama gelir?", correctAnswer: "Zaman yaraları iyileştirir", incorrectAnswers: ["Zaman her zaman yeter", "İlaç her zaman gereklidir", "Yara her zaman kalır"], mnemonic: "Zaman ‘Z’engin, ‘İ’laç gibi!" },
+            { id: 373, question: "Osmanlı Devleti’nde ilk yolcu gemisi ne zaman kullanılmıştır?", correctAnswer: "1851", incorrectAnswers: ["1831", "1876", "1908"], mnemonic: "1851’de ‘Y’olcu ‘G’emisi ‘G’eldi, Osmanlı’da!" },
+            { id: 374, question: "Güneydoğu Anadolu Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Diyarbakır", incorrectAnswers: ["Gaziantep", "Şanlıurfa", "Mardin"], mnemonic: "Güneydoğu’da ‘D’iyarbakır, ‘T’urizmin kalbi!" },
+            { id: 375, question: "‘Ağaçtan odun, insandan söz çıkar’ atasözü neyi ifade eder?", correctAnswer: "İnsanlar konuşur", incorrectAnswers: ["Ağaç her zaman odun", "Söz her zaman çıkar", "Konuşmak gereksizdir"], mnemonic: "Ağaç ‘A’ğır, insan ‘S’öz çıkarır!" },
+            { id: 376, question: "Atatürk’ün en sevdiği mimari eser nedir?", correctAnswer: "Ayasofya", incorrectAnswers: ["Süleymaniye", "Selimiye", "Topkapı Sarayı"], mnemonic: "Ayasofya ‘A’kıllı, ‘A’tatürk’ün eseri!" },
+            { id: 377, question: "Türkiye’nin en büyük doğal gaz depolama tesisi neresidir?", correctAnswer: "Silo Depolama Tesisi", incorrectAnswers: ["Marmara Ereğlisi", "Eskişehir Depolama", "Ankara Depolama"], mnemonic: "Silo ‘S’ıkı, ‘D’epolama en büyük!" },
+            { id: 378, question: "‘Baba ocağı bir başka’ atasözü ne anlama gelir?", correctAnswer: "Aile yuvası özeldir", incorrectAnswers: ["Baba her zaman iyidir", "Ocağın her zaman başka", "Aile gereksizdir"], mnemonic: "Baba ‘B’ir başka, ‘O’cağı özeldir!" },
+            { id: 379, question: "Osmanlı Devleti’nde ilk sinema salonu ne zaman açılmıştır?", correctAnswer: "1908", incorrectAnswers: ["1831", "1876", "1923"], mnemonic: "1908’de ‘S’inema ‘S’alonu ‘A’çıldı, Osmanlı’da!" },
+            { id: 380, question: "Karadeniz Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Ordu", incorrectAnswers: ["Rize", "Trabzon", "Samsun"], mnemonic: "Karadeniz’de ‘O’rdu, ‘T’urizmin incisi!" },
+            { id: 381, question: "‘Cahil cesareti’ atasözü neyi ifade eder?", correctAnswer: "Bilgisizlikten kaynaklanan korkusuzluk", incorrectAnswers: ["Cahil her zaman cesur", "Cesaret her zaman iyidir", "Bilgi gereksizdir"], mnemonic: "Cahil ‘C’esur, ‘K’orkusuzluktan!" },
+            { id: 382, question: "Atatürk’ün en sevdiği tiyatro yönetmeni kimdir?", correctAnswer: "Muhsin Ertuğrul", incorrectAnswers: ["Ahmet Kutsi Tecer", "Cevat Fehmi Başkut", "Nazım Hikmet"], mnemonic: "Muhsin ‘M’ükemmel, ‘A’tatürk’ün yönetmeni!" },
+            { id: 383, question: "Türkiye’nin en büyük balıkçı barınağı neresidir?", correctAnswer: "İzmir Balıkçı Barınağı", incorrectAnswers: ["Antalya Balıkçı Barınağı", "Marmaris Balıkçı Barınağı", "Samsun Balıkçı Barınağı"], mnemonic: "İzmir ‘İ’lk, ‘B’alıkçı barınağı en büyük!" },
+            { id: 384, question: "‘Düşenin dostu olmaz’ atasözü ne anlama gelir?", correctAnswer: "Zor günde dostlar kaybolur", incorrectAnswers: ["Dost her zaman kalır", "Düşmek her zaman iyidir", "Dostluk gereksizdir"], mnemonic: "Düşen ‘D’osttan, ‘Y’oksun kalır!" },
+            { id: 385, question: "Osmanlı Devleti’nde ilk elektrikli tren ne zaman kullanılmıştır?", correctAnswer: "1927", incorrectAnswers: ["1831", "1908", "1940"], mnemonic: "1927’de ‘E’lektrikli ‘T’ren ‘T’ıkırdadı, Osmanlı’da!" },
+            { id: 386, question: "Ege Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Çeşme", incorrectAnswers: ["Kuşadası", "Bodrum", "Marmaris"], mnemonic: "Ege’de ‘Ç’eşme, ‘T’urizmin incisi!" },
+            { id: 387, question: "‘El elden üstün, irade Allah’tan’ atasözü neyi ifade eder?", correctAnswer: "Kader Allah’a aittir", incorrectAnswers: ["El her zaman üstündür", "İrade her zaman iyidir", "Allah önemsizdir"], mnemonic: "El ‘E’l üstün, ‘İ’rade Allah’tan!" },
+            { id: 388, question: "Atatürk’ün en sevdiği heykel nedir?", correctAnswer: "Zafer Anıtı", incorrectAnswers: ["Cumhuriyet Anıtı", "Barış Anıtı", "Atatürk Anıtı"], mnemonic: "Zafer ‘Z’irve, ‘A’tatürk’ün heykeli!" },
+            { id: 389, question: "Türkiye’nin en büyük gıda fabrikası neresidir?", correctAnswer: "Ülker Fabrikası", incorrectAnswers: ["Eti Fabrikası", "Tamek Fabrikası", "Pınar Fabrikası"], mnemonic: "Ülker ‘Ü’stün, ‘G’ıda fabrikası en büyük!" },
+            { id: 390, question: "‘Gözden ırak olan gönülden de ırak olur’ atasözü ne anlama gelir?", correctAnswer: "Uzak olan unutulur", incorrectAnswers: ["Göz her zaman görür", "Gönül her zaman sever", "Uzaklık önemsizdir"], mnemonic: "Göz ‘G’örmezse, ‘G’önül uzaklaşır!" },
+            { id: 391, question: "Osmanlı Devleti’nde ilk hava harp okulu ne zaman kurulmuştur?", correctAnswer: "1912", incorrectAnswers: ["1831", "1908", "1923"], mnemonic: "1912’de ‘H’ava ‘H’arp okulu ‘K’uruldu, Osmanlı’da!" },
+            { id: 392, question: "Doğu Anadolu Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Kars", incorrectAnswers: ["Van", "Ağrı", "Erzurum"], mnemonic: "Doğu’da ‘K’ars, ‘T’urizmin incisi!" },
+            { id: 393, question: "‘Haksız iken sus’ atasözü neyi ifade eder?", correctAnswer: "Haksızken konuşma", incorrectAnswers: ["Susmak her zaman iyidir", "Haksızlık her zaman susar", "Konuşmak gereklidir"], mnemonic: "Haksız ‘H’ayır, ‘S’us!" },
+            { id: 394, question: "Atatürk’ün en sevdiği müzisyen kimdir?", correctAnswer: "Refik Fersan", incorrectAnswers: ["Cemal Reşit Rey", "Ahmet Adnan Saygun", "Necil Kazım Akses"], mnemonic: "Refik ‘R’itmik, ‘A’tatürk’ün müzisyeni!" },
+            { id: 395, question: "Türkiye’nin en büyük kimya fabrikası neresidir?", correctAnswer: "Petkim Aliağa Kompleksi", incorrectAnswers: ["TÜPRAŞ", "Soda Sanayi", "Ege Gübre"], mnemonic: "Petkim ‘P’olimer, ‘K’imya fabrikası en büyük!" },
+            { id: 396, question: "‘İyilik yap, denize at’ atasözü ne anlama gelir?", correctAnswer: "İyilik beklenmeden yapılmalı", incorrectAnswers: ["Deniz her zaman iyidir", "İyilik her zaman beklenir", "Atmak gereksizdir"], mnemonic: "İyilik ‘İ’çten, ‘D’enize at!" },
+            { id: 397, question: "Osmanlı Devleti’nde ilk elektrikli saat ne zaman kullanılmıştır?", correctAnswer: "1879", incorrectAnswers: ["1831", "1908", "1923"], mnemonic: "1879’da ‘E’lektrikli ‘S’aat ‘T’ıkırdadı, Osmanlı’da!" },
+            { id: 398, question: "Güneydoğu Anadolu Bölgesi’nin en önemli turizm merkezi neresidir?", correctAnswer: "Mardin", incorrectAnswers: ["Gaziantep", "Şanlıurfa", "Diyarbakır"], mnemonic: "Güneydoğu’da ‘M’ardin, ‘T’urizmin kalbi!" },
+            { id: 399, question: "‘Kızını dövmeyen dizini döver’ atasözü neyi ifade eder?", correctAnswer: "Çocuk disiplin gerektirir", incorrectAnswers: ["Dövmek her zaman iyidir", "Disiplin gereksizdir", "Kız her zaman döver"], mnemonic: "Kız ‘K’ontrol, ‘D’isiplinle!" },
+            { id: 400, question: "Atatürk’ün en sevdiği tarihçi kimdir?", correctAnswer: "Halil İnalcık", incorrectAnswers: ["İlber Ortaylı", "Yusuf Halaçoğlu", "Cemal Kafadar"], mnemonic: "Halil ‘H’ikaye, ‘A’tatürk’ün tarihçisi!" }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongQuestions = [];
+
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const mnemonicElement = document.getElementById('mnemonic');
+        const scoreElement = document.getElementById('score');
+        const nextButton = document.getElementById('next-button');
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length && wrongQuestions.length === 0) {
+                questionElement.textContent = "Quiz bitti! Skorunuz: " + score + "/" + questions.length;
+                optionsElement.innerHTML = "";
+                mnemonicElement.style.display = "none";
+                nextButton.style.display = "none";
+                return;
+            }
+
+            if (currentQuestionIndex >= questions.length && wrongQuestions.length > 0) {
+                questions.push(...wrongQuestions);
+                wrongQuestions = [];
+                shuffle(questions);
+                currentQuestionIndex = 0;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            questionElement.textContent = currentQuestion.question;
+            mnemonicElement.textContent = "Hafıza Tekniği: " + currentQuestion.mnemonic;
+            mnemonicElement.style.display = "none";
+            nextButton.style.display = "none";
+
+            const allOptions = [currentQuestion.correctAnswer, ...currentQuestion.incorrectAnswers];
+            shuffle(allOptions);
+
+            optionsElement.innerHTML = "";
+            allOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option, currentQuestion.correctAnswer));
+                optionsElement.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedOption, correctAnswer) {
+            const buttons = optionsElement.getElementsByTagName('button');
+            for (let button of buttons) {
+                button.disabled = true;
+                if (button.textContent === correctAnswer) {
+                    button.style.backgroundColor = '#4CAF50';
+                } else if (button.textContent === selectedOption) {
+                    button.style.backgroundColor = '#f44336';
+                }
+            }
+
+            if (selectedOption === correctAnswer) {
+                score++;
+                scoreElement.textContent = "Skor: " + score;
+            } else {
+                wrongQuestions.push(questions[currentQuestionIndex]);
+            }
+
+            mnemonicElement.style.display = "block";
+            nextButton.style.display = "block";
+        }
+
+        function loadNextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
